@@ -15,7 +15,6 @@
 3. Access `http://localhost:8080`
 
 ## Attention
-*  Currently only support for `PostgresSQL` 
+* Currently only support for `PostgresSQL` 
 
-* This project was made by `Kotlin`
 > Happy coding with `Kotlin`
