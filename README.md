@@ -16,7 +16,7 @@
 - [ ] Go
 
 ## Deploy
-1. Change config info in file `Main.kt`
+1. Change config info in file `App.kt`
 2. Run `App.kt`
 3. Access `http://localhost:8080`
 
