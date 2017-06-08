@@ -9,7 +9,13 @@
 * Generated `Model`, `DAO`, `Service`, `Controller` layers
 * Generated basic `CRUD` operations
 
-## How to
+## Language
+- [x] Java
+- [ ] Kotlin
+- [ ] Python
+- [ ] Go
+
+## Deploy
 1. Change config info in file `Main.kt`
 2. Run `App.kt`
 3. Access `http://localhost:8080`
@@ -17,4 +23,4 @@
 ## Attention
 * Currently only support for `PostgresSQL` 
 
-> Happy coding with `Kotlin`
+> Happy coding with [Kotlin](https://kotlinlang.org/)
