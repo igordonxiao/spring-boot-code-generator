@@ -28,6 +28,9 @@ val ZIP_FILE_NAME = "application.zip"
  */
 val ZIP_FILE_PATH = DESTINATION_PARENT_DIR + "/" + ZIP_FILE_NAME
 
+/**
+ * 运行主方法
+ */
 fun main(args: Array<String>) {
     port(8080)
     staticFileLocation("/static")
