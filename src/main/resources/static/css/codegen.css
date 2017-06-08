@@ -284,3 +284,5 @@ a.pure-button-primary {
         font-size: 300%;
     }
 }
+
+.submit-form select {width: 100%;}

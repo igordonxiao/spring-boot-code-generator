@@ -5,24 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <title>Generate code for spring boot application</title>
-    
+
     <link rel="stylesheet" href="css/pure.min.css">
-    
+
     <!--[if lte IE 8]>
-        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-old-ie-min.css">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-old-ie-min.css">
     <![endif]-->
     <!--[if gt IE 8]><!-->
-        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-min.css">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-min.css">
     <!--<![endif]-->
-    
+
     <link rel="stylesheet" href="css/font-awesome.css">
-    
-        <!--[if lte IE 8]>
-            <link rel="stylesheet" href="css/codegen-old-ie.css">
-        <![endif]-->
-        <!--[if gt IE 8]><!-->
-            <link rel="stylesheet" href="css/codegen.css">
-        <!--<![endif]-->
+
+    <!--[if lte IE 8]>
+    <link rel="stylesheet" href="css/codegen-old-ie.css">
+    <![endif]-->
+    <!--[if gt IE 8]><!-->
+    <link rel="stylesheet" href="css/codegen.css">
+    <!--<![endif]-->
 </head>
 <body>
 <div class="header">
@@ -30,14 +30,15 @@
         <a class="pure-menu-heading" href="#">Code Generator For Spring Boot Application</a>
 
         <ul class="pure-menu-list">
-            <li class="pure-menu-item pure-menu-selected"><a href="http://doc4dracular.herokuapp.com/" class="pure-menu-link" target="_blank">Dracula</a></li>
+            <li class="pure-menu-item pure-menu-selected"><a href="http://doc4dracular.herokuapp.com/"
+                                                             class="pure-menu-link" target="_blank">Dracula</a></li>
         </ul>
     </div>
 </div>
 
 <div class="splash-container">
     <div class="splash">
-        <h1 class="splash-head">Code Gen</h1>
+        <h1 class="splash-head">Code Gen From <strong>PostgresSQL</strong></h1>
         <p class="splash-subhead">
             One Click, NO Coding, Scroll Down!
         </p>
@@ -46,7 +47,7 @@
 
 <div class="content-wrapper">
     <div class="content">
-        <h2 class="content-head is-center button-warning">Currently only support for <strong>PostgresSQL</strong> </h2>
+        <!--<h2 class="content-head is-center button-warning">Currently only support for <strong>PostgresSQL</strong></h2>-->
     </div>
 
     <div class="content">
@@ -54,7 +55,7 @@
 
         <div class="is-center">
             <div class="l-box is-center">
-                <form class="pure-form pure-form-stacked" method="post" action="gen" target="submitIframe">
+                <form class="pure-form pure-form-stacked submit-form" method="post" action="gen" target="submitIframe">
                     <fieldset>
                         <label for="dbIp">DB IP</label>
                         <input id="dbIp" name="DB_IP" type="text" value="localhost">
@@ -76,6 +77,13 @@
                         <input id="projectVersion" name="PROJECT_VERSION" type="text" value="1.0.0">
                         <label for="projectDescription">PROJECT DESCRIPTION</label>
                         <input id="projectDescription" name="PROJECT_DESCRIPTION" type="text" value="demo project">
+                        <label for="language">LANGUAGE</label>
+                        <select id="language" name="LANGUAGE">
+                            <option value="Java">Java</option>
+                            <option value="Kotlin">Kotlin</option>
+                            <option value="Go">Go</option>
+                            <option value="Python">Python</option>
+                        </select>
                         <button type="submit" class="pure-button">Generate</button>
                     </fieldset>
                 </form>

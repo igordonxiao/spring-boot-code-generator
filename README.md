@@ -1,6 +1,6 @@
-## Code generator for Spring Boot Web Project(JAVA resources)
+## Code generator for Spring Boot Web Project
 
-> This project is used to generate java source files with spring boot from database.
+> This project is used to generate source code with spring boot from database.
 
 * Generated standard `MAVEN` project structure
 * Generated file `pom.xml`
@@ -11,7 +11,7 @@
 
 ## How to
 1. Change config info in file `Main.kt`
-2. Run `Main.kt`
+2. Run `App.kt`
 3. Access `http://localhost:8080`
 
 ## Attention

@@ -126,9 +126,9 @@ class Generator(
     val CONTROLLER_PACKAGE = GROUP_ID + ".controller"
 
     /**
-     * 生成项目
+     * 生成Java项目
      */
-    fun genProject() {
+    fun genJava() {
         makeDirs()
         genResourceFiles()
         genPackageDirs()
@@ -386,7 +386,7 @@ import ${MODEL_PACKAGE}.${tableName.capitalize()};
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
 /**
-* ${tableName.capitalize()}Repository
+* ${tableName.capitalize()} Repository
 */
 @Repository
 static interface ${tableName.capitalize()}Repository extends PagingAndSortingRepository<${tableName.capitalize()}, Long> {
@@ -411,7 +411,7 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
 /**
-* ${tableName.capitalize()}Service
+* ${tableName.capitalize()} Service
 */
 @Service("${tableName}Service")
 @Transactional
@@ -481,6 +481,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.static.bind.annotation.*;
 
+/**
+ * ${capitalizeTableName} Controller
+ */
 @Controller
 @RequestMapping("/${tableName}static")
 static class ${capitalizeTableName}Controller {
