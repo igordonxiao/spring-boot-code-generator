@@ -1,6 +1,6 @@
 package io.github.igordonxiao
 
-import io.github.igordonxiao.codegen.Generator
+import io.github.igordonxiao.codegen.JavaGenerator
 import io.github.igordonxiao.codegen.compress
 import spark.ModelAndView
 import spark.Spark.*
@@ -44,10 +44,10 @@ fun main(args: Array<String>) {
         try {
             Runtime.getRuntime().exec("rm -rf ${DESTINATION_DIR}")
             Runtime.getRuntime().exec("rm -f ${ZIP_FILE_PATH}")
-            val generator = Generator(DESTINATION_DIR, DB_IP = params["DB_IP"].value(), DB_PORT = params["DB_PORT"].value(), DB_NAME = params["DB_NAME"].value(), DB_USERNAME = params["DB_USERNAME"].value(), DB_PASSWORD = params["DB_PASSWORD"].value(), GROUP_ID = params["GROUP_ID"].value(), ARTIFACT_ID = params["ARTIFACT_ID"].value(), PROJECT_NAME = params["PROJECT_NAME"].value(), PROJECT_VERSION = params["PROJECT_VERSION"].value(), PROJECT_DESCRIPTION = params["PROJECT_DESCRIPTION"].value())
-
             when (params["LANGUAGE"].value().toUpperCase()) {
-                "JAVA" -> generator.genJava()
+                "JAVA" -> {
+                    JavaGenerator(DESTINATION_DIR, DB_IP = params["DB_IP"].value(), DB_PORT = params["DB_PORT"].value(), DB_NAME = params["DB_NAME"].value(), DB_USERNAME = params["DB_USERNAME"].value(), DB_PASSWORD = params["DB_PASSWORD"].value(), GROUP_ID = params["GROUP_ID"].value(), ARTIFACT_ID = params["ARTIFACT_ID"].value(), PROJECT_NAME = params["PROJECT_NAME"].value(), PROJECT_VERSION = params["PROJECT_VERSION"].value(), PROJECT_DESCRIPTION = params["PROJECT_DESCRIPTION"].value()).build()
+                }
                 else -> res.redirect("/notSupport")
             }
             compress(DESTINATION_DIR)

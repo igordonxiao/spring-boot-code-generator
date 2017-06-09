@@ -12,9 +12,9 @@ import javax.persistence.GenerationType
 import javax.persistence.Table
 
 /**
- * 生成器
+ * 生成Java项目生成器
  */
-class Generator(
+class JavaGenerator(
         /**
          * 生成代码的目标文件夹
          */
@@ -128,7 +128,7 @@ class Generator(
     /**
      * 生成Java项目
      */
-    fun genJava() {
+    fun build() {
         makeDirs()
         genResourceFiles()
         genPackageDirs()
