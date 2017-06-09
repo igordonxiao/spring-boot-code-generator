@@ -22,7 +22,7 @@
 3. Access `http://localhost:8080`
 
 ## Deploy
-1. Download `germ.jar`
+1. Download `germ.jar.zip` and unzip it
 2. Run command below, `workingPath` refers to the generated zip file in which directory will be stored
     ```bash
     java -jar germ.jar [workingPath]
