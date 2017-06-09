@@ -12,26 +12,31 @@ import java.nio.file.Paths
 /**
  * 压缩目标文件夹
  */
-val DESTINATION_PARENT_DIR = "/Users/gordon/Desktop"
-/**
- * 生成代码的目标文件夹
- */
-val DESTINATION_DIR = "${DESTINATION_PARENT_DIR}/application/"
-
-/**
- * 打包的ZIP文件名
- */
-val ZIP_FILE_NAME = "application.zip"
-
-/**
- * 打包的ZIP文件路径
- */
-val ZIP_FILE_PATH = DESTINATION_PARENT_DIR + "/" + ZIP_FILE_NAME
+var DESTINATION_PARENT_DIR = "/Users/gordon/Desktop"
 
 /**
  * 运行主方法
  */
 fun main(args: Array<String>) {
+    if (args.size == 1) {
+        val workDir = File(args[0])
+        if (!workDir.exists()) workDir.mkdirs()
+        DESTINATION_PARENT_DIR = workDir.absolutePath
+    }
+    /**
+     * 生成代码的目标文件夹
+     */
+    val DESTINATION_DIR = "${DESTINATION_PARENT_DIR}/application/"
+
+    /**
+     * 打包的ZIP文件名
+     */
+    val ZIP_FILE_NAME = "application.zip"
+
+    /**
+     * 打包的ZIP文件路径
+     */
+    val ZIP_FILE_PATH = DESTINATION_PARENT_DIR + "/" + ZIP_FILE_NAME
     port(8080)
     staticFileLocation("/static")
     File(DESTINATION_DIR).apply { if (!this.exists()) this.mkdirs() }
