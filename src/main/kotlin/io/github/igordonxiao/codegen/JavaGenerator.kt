@@ -16,7 +16,7 @@ import javax.persistence.Table
  */
 class JavaGenerator(
         /**
-         * 生成代码的目标文件夹
+         * 默认生成代码的目标文件夹
          */
         val DESTINATION_DIR: String = "/Users/gordon/Desktop/gen/",
         /**
