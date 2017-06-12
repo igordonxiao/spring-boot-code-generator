@@ -82,9 +82,24 @@ class JavaGenerator(
     val CODE_BASE_DIR = (DESTINATION_DIR + SOURCE_DIRS[0] + GROUP_ID.replace(".", "/"))
 
     /**
+     * 单元测试代码文件夹
+     */
+    val UNIT_TEST_CODE_BASE_DIR = (DESTINATION_DIR + SOURCE_DIRS[2] + GROUP_ID.replace(".", "/"))
+
+    /**
      * 资源文件夹
      */
     val RESOURCE_DIR = (DESTINATION_DIR + SOURCE_DIRS[1])
+
+    /**
+     * 通用类文件夹
+     */
+    val COMMON_PACKAGE_DIR = CODE_BASE_DIR + "/common"
+
+    /**
+     * 通用类文件包名
+     */
+    val COMMON_PACKAGE = GROUP_ID + ".common"
 
     /**
      * 模型类文件夹
@@ -132,6 +147,7 @@ class JavaGenerator(
         makeDirs()
         genResourceFiles()
         genPackageDirs()
+        genCommonFiles()
         genSpringBootApp()
         Database.connect(url = DB_URL, user = DB_USERNAME, password = DB_PASSWORD, driver = DB_DRIVER)
         dbTables().forEach {
@@ -139,6 +155,7 @@ class JavaGenerator(
             genDao(it)
             genService(it)
             genController(it)
+            genUnitTest(it)
         }
     }
 
@@ -152,18 +169,9 @@ class JavaGenerator(
      */
     private fun genResourceFiles() {
         // 生成.gitignore文件
-        (DESTINATION_DIR + ".gitignore").toFile("""target/
-!.mvn/wrapper/maven-wrapper.jar
-
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-
-### IntelliJ IDEA ###
+        (DESTINATION_DIR + ".gitignore").toFile("""### IntelliJ IDEA ###
+target/
+out/
 .idea
 *.iws
 *.iml
@@ -195,7 +203,7 @@ nbdist/
         <repository>
             <id>aliyun</id>
             <name>aliyun Central Repo</name>
-            <url>http://maven.aliyun.com/nexus/content/groups/static</url>
+            <url>http://maven.aliyun.com/nexus/content/groups/public</url>
         </repository>
     </repositories>
 
@@ -215,7 +223,7 @@ nbdist/
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-static</artifactId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -264,6 +272,164 @@ server:
     }
 
     /**
+     * 生成通用文件目录及代码
+     */
+    fun genCommonFiles() {
+        (COMMON_PACKAGE_DIR).toDirs()
+        (COMMON_PACKAGE_DIR + "/JSONResponse.java").toFile("""package ${COMMON_PACKAGE};
+
+import org.springframework.http.HttpStatus;
+
+import java.io.Serializable;
+
+/**
+ * Business Logic Response Object
+ */
+public final class JSONResponse implements Serializable {
+    private static final long serialVersionUID = 1013123223232L;
+    private static final JSONResponse DEFAULT_OK = OK(HttpStatus.OK);
+
+    /**
+     * response something to client with status and message
+     *
+     * @param status
+     * @param message
+     */
+    public JSONResponse(HttpStatus status, String message) {
+        this.status = status;
+        this.message = message;
+        this.data = null;
+    }
+
+    /**
+     * response something to client with status, message, and data
+     *
+     * @param status
+     * @param message
+     * @param data
+     */
+    public JSONResponse(HttpStatus status, String message, Object data) {
+        this.status = status;
+        this.message = message;
+        this.data = data;
+    }
+
+    /**
+     * Response Status
+     */
+    private HttpStatus status;
+
+    /**
+     * Business Logic Response Message
+     */
+    private String message;
+
+    /**
+     * Business Logic Response Object
+     */
+    private Object data;
+
+    /**
+     * response successfully with message
+     *
+     * @return
+     */
+    public static JSONResponse OK() {
+        return DEFAULT_OK;
+    }
+
+
+    /**
+     * response successfully with message
+     *
+     * @param message
+     * @param data
+     * @return
+     */
+    public static JSONResponse OK(String message, Object data) {
+        return new JSONResponse(HttpStatus.OK, message, data);
+    }
+
+    /**
+     * response successfully with default message and custom object
+     *
+     * @param data
+     * @return
+     */
+    public static JSONResponse OK(Object data) {
+        return new JSONResponse(HttpStatus.OK, HttpStatus.OK.getReasonPhrase(), data);
+    }
+
+    /**
+     * response error with message
+     *
+     * @param status
+     * @return
+     */
+    private static JSONResponse ERROR(HttpStatus status) {
+        return new JSONResponse(status, status.getReasonPhrase());
+    }
+
+    /**
+     * response error with bad param
+     *
+     * @return
+     */
+    public static JSONResponse ERROR_FOR_BAD_PARAM() {
+        return ERROR(HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * response error with not found
+     *
+     * @return
+     */
+    public static JSONResponse ERROR_FOR_NOT_FOUND() {
+        return ERROR(HttpStatus.NOT_FOUND);
+    }
+
+    /**
+     * response error with server error
+     *
+     * @return
+     */
+    public static JSONResponse ERROR_FOR_SERVER_ERROR() {
+        return ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    public Integer getStatus() {
+        return status.value();
+    }
+
+    public HttpStatus getStatusOriginal() {
+        return status;
+    }
+
+    public void setStatus(HttpStatus status) {
+        this.status = status;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public Object getData() {
+        return data;
+    }
+
+    public void setData(Object data) {
+        this.data = data;
+    }
+}
+
+""")
+    }
+
+    /**
      * 生成Spring Boot 主运行文件
      */
     private fun genSpringBootApp() {
@@ -274,8 +440,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-static class MainApplication {
-	static static void main(String[] args) {
+public class MainApplication {
+	public static void main(String[] args) {
 		SpringApplication.run(MainApplication.class, args);
 	}
 }
@@ -327,14 +493,17 @@ static class MainApplication {
         return FieldSpec.builder(java.lang.Long::class.java, "id", Modifier.PRIVATE).addAnnotation(javax.persistence.Id::class.java).addAnnotation(generatedValueAnnotation).addAnnotation(idColumnAnnotation).build()
     }
 
+    val dbTypeMapToLong = arrayOf<String>("smallint", "bigint", "integer")
+    val dbTypeMapToString = arrayOf<String>("text")
+    val dbTypeMapToDate = arrayOf<String>("date", "timestamp with time zone")
     /**
      * 获取字段对应的Java类
      */
     private fun fieldType(type: String): Class<*> {
         return when (type) {
-            in arrayOf<String>("bigint", "integer") -> java.lang.Long::class.java
-            in arrayOf<String>("text") -> String::class.java
-            in arrayOf<String>("date", "timestamp with time zone") -> Date::class.java
+            in dbTypeMapToLong -> java.lang.Long::class.java
+            in dbTypeMapToString -> String::class.java
+            in dbTypeMapToDate -> Date::class.java
             else ->
                 throw RuntimeException("不支持的数据类型: ${type}")
         }
@@ -371,8 +540,7 @@ static class MainApplication {
             modelSpec.addMethod(MethodSpec.methodBuilder("get${it.name.capitalize()}").addStatement("return this.${it.name}").returns(fieldType(it.type)).addModifiers(Modifier.PUBLIC).build())
             modelSpec.addMethod(MethodSpec.methodBuilder("set${it.name.capitalize()}").addParameter(fieldType(it.type), it.name).addStatement("this.${it.name}=${it.name}").addModifiers(Modifier.PUBLIC).build())
         }
-        JavaFile.builder(MODEL_PACKAGE, modelSpec.build()).addFileComment("${table.name.capitalize()} Model")
-                .build().writeTo(File((DESTINATION_DIR + SOURCE_DIRS[0])))
+        JavaFile.builder(MODEL_PACKAGE, modelSpec.build()).build().writeTo(File((DESTINATION_DIR + SOURCE_DIRS[0])))
     }
 
     /**
@@ -389,7 +557,7 @@ import org.springframework.stereotype.Repository;
 * ${tableName.capitalize()} Repository
 */
 @Repository
-static interface ${tableName.capitalize()}Repository extends PagingAndSortingRepository<${tableName.capitalize()}, Long> {
+public interface ${tableName.capitalize()}Repository extends PagingAndSortingRepository<${tableName.capitalize()}, Long> {
 
 }
 """)
@@ -415,12 +583,12 @@ import javax.validation.constraints.NotNull;
 */
 @Service("${tableName}Service")
 @Transactional
-static class ${capitalizeTableName}Service {
+public class ${capitalizeTableName}Service {
 
     private ${capitalizeTableName}Repository ${tableName}Repository;
 
     @Autowired
-    static void set${capitalizeTableName}Repository(${capitalizeTableName}Repository ${tableName}Repository) {
+    public void set${capitalizeTableName}Repository(${capitalizeTableName}Repository ${tableName}Repository) {
         this.${tableName}Repository = ${tableName}Repository;
     }
 
@@ -429,7 +597,7 @@ static class ${capitalizeTableName}Service {
      *
      * @return
      */
-    static Iterable<$capitalizeTableName> getAll() {
+    public Iterable<$capitalizeTableName> getAll() {
         return ${tableName}Repository.findAll();
     }
 
@@ -439,7 +607,7 @@ static class ${capitalizeTableName}Service {
      * @param id
      * @return
      */
-    static ${capitalizeTableName} getById(@NotNull Long id) {
+    public ${capitalizeTableName} getById(@NotNull Long id) {
         return ${tableName}Repository.findOne(id);
     }
 
@@ -448,8 +616,8 @@ static class ${capitalizeTableName}Service {
      *
      * @param ${tableName}
      */
-    static void save(@NotNull ${capitalizeTableName} ${tableName}) {
-        ${tableName}Repository.save(${tableName});
+    public ${capitalizeTableName} save(@NotNull ${capitalizeTableName} ${tableName}) {
+        return (${capitalizeTableName})${tableName}Repository.save(${tableName});
     }
 
     /**
@@ -457,7 +625,7 @@ static class ${capitalizeTableName}Service {
      *
      * @param id
      */
-    static void delete(@NotNull Long id) {
+    public void delete(@NotNull Long id) {
         ${tableName}Repository.delete(id);
     }
 }
@@ -473,106 +641,154 @@ static class ${capitalizeTableName}Service {
         val capitalizeTableName = tableName.capitalize()
         (CONTROLLER_PACKAGE_DIR + "/" + capitalizeTableName + "Controller.java").toFile("""package ${CONTROLLER_PACKAGE};
 
+import ${COMMON_PACKAGE}.JSONResponse;
 import ${MODEL_PACKAGE}.${capitalizeTableName};
 import ${SERVICE_PACKAGE}.${capitalizeTableName}Service;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Controller;
-import org.springframework.static.bind.annotation.*;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * ${capitalizeTableName} Controller
  */
-@Controller
-@RequestMapping("/${tableName}static")
-static class ${capitalizeTableName}Controller {
-
+@RestController
+@RequestMapping("/${tableName}s")
+public class ${capitalizeTableName}Controller {
     private ${capitalizeTableName}Service ${tableName}Service;
 
     @Autowired
-    static void set${capitalizeTableName}Service(${capitalizeTableName}Service ${tableName}Service) {
+    public void set${capitalizeTableName}Service(${capitalizeTableName}Service ${tableName}Service) {
         this.${tableName}Service = ${tableName}Service;
     }
 
     /**
-     * get all
+     * get a ${capitalizeTableName}
      *
-     * @return Iterable<${capitalizeTableName}>
-     */
-    @RequestMapping
-    @ResponseBody
-    static Iterable<${capitalizeTableName}> all() {
-        return ${tableName}Service.getAll();
-    }
-
-    /**
-     * get one
-     *
-     * @return ${capitalizeTableName}
+     * @return JSONResponse
      */
     @RequestMapping("/{id}")
     @ResponseBody
-    static ${capitalizeTableName} one(@PathVariable Long id) {
-        return ${tableName}Service.getById(id);
+    public JSONResponse one(@PathVariable Long id) {
+        ${capitalizeTableName} ${tableName} = ${tableName}Service.getById(id);
+        if (${tableName} == null) return JSONResponse.ERROR_FOR_NOT_FOUND();
+        return JSONResponse.OK(${tableName});
     }
 
     /**
-     * add
+     * add a ${capitalizeTableName}
      *
      * @param ${tableName}
-     * @return HttpStatus
+     * @return JSONResponse
      */
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
-    static HttpStatus add(@RequestBody ${capitalizeTableName} ${tableName}) {
-        ${tableName}Service.save(${tableName});
-        return HttpStatus.OK;
+    public JSONResponse add(@RequestBody ${capitalizeTableName} ${tableName}) {
+        ${capitalizeTableName} saved${capitalizeTableName} = ${tableName}Service.save(${tableName});
+        if (saved${capitalizeTableName} == null) return JSONResponse.ERROR_FOR_SERVER_ERROR();
+        return JSONResponse.OK(${tableName});
     }
 
     /**
-     * update
+     * update a ${capitalizeTableName}
      *
      * @param ${tableName}
-     * @return HttpStatus
+     * @return JSONResponse
      */
     @RequestMapping(method = RequestMethod.PUT)
     @ResponseBody
-    static HttpStatus update(@RequestBody ${capitalizeTableName} ${tableName}) {
-        if (${tableName}.getId() == null) {
-            return HttpStatus.BAD_REQUEST;
-        }
+    public JSONResponse update(@RequestBody ${capitalizeTableName} ${tableName}) {
+        if (${tableName}.getId() == null) return JSONResponse.ERROR_FOR_BAD_PARAM();
         ${capitalizeTableName} ${tableName}Db = ${tableName}Service.getById(${tableName}.getId());
-        if (${tableName}Db == null) {
-            return HttpStatus.NOT_FOUND;
-        }
+        if (${tableName}Db == null) return JSONResponse.ERROR_FOR_NOT_FOUND();
         BeanUtils.copyProperties(${tableName}, ${tableName}Db);
         ${tableName}Service.save(${tableName}Db);
-        return HttpStatus.OK;
+        return JSONResponse.OK(${tableName}Db);
     }
 
     /**
-     * delete
+     * delete a ${capitalizeTableName}
      *
      * @param id
-     * @return HttpStatus
+     * @return JSONResponse
      */
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     @ResponseBody
-    static HttpStatus delete(@PathVariable Long id) {
-        if (id < 0) {
-            return HttpStatus.BAD_REQUEST;
-        }
+    public JSONResponse delete(@PathVariable Long id) {
+        if (id <= 0) return JSONResponse.ERROR_FOR_BAD_PARAM();
         ${capitalizeTableName} ${tableName}Db = ${tableName}Service.getById(id);
-        if (${tableName}Db == null) {
-            return HttpStatus.NOT_FOUND;
-        }
+        if (${tableName}Db == null) return JSONResponse.ERROR_FOR_NOT_FOUND();
         ${tableName}Service.delete(id);
-        return HttpStatus.OK;
+        return JSONResponse.OK(${tableName}Db);
     }
 }
+
 """)
 
+    }
+
+    fun genUnitTest(table: Ptable) {
+        val tableName = table.name
+        val capitalizeTableName = tableName.capitalize()
+        UNIT_TEST_CODE_BASE_DIR.toDirs()
+        (UNIT_TEST_CODE_BASE_DIR + "/${capitalizeTableName}Test.java").toFile("""package ${GROUP_ID};
+
+import ${MODEL_PACKAGE}.${capitalizeTableName};
+import ${SERVICE_PACKAGE}.${capitalizeTableName}Service;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Rollback;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import javax.transaction.Transactional;
+
+import static org.junit.Assert.assertEquals;
+
+/**
+ * Unit Test for ${capitalizeTableName}
+ */
+@RunWith(SpringRunner.class)
+@SpringBootTest
+@Transactional
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+public class ${capitalizeTableName}Test {
+    private ${capitalizeTableName}Service ${tableName}Service;
+
+    @Autowired
+    public void set${capitalizeTableName}Service(${capitalizeTableName}Service ${tableName}Service) {
+        this.${tableName}Service = ${tableName}Service;
+    }
+
+    @Test
+    @Rollback(false)
+    public void test001Save() {
+
+    }
+
+    @Test
+    @Rollback(false)
+    public void test002Query() {
+
+    }
+
+    @Test
+    @Rollback(false)
+    public void test003Update() {
+
+    }
+
+    @Test
+    @Rollback(false)
+    public void test004Delete() {
+
+    }
+}
+
+
+""")
     }
 
 }

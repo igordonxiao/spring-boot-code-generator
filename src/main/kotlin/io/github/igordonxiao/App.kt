@@ -77,6 +77,7 @@ fun main(args: Array<String>) {
                 e.message
             }
         } catch (e: Exception) {
+            e.printStackTrace()
             e.message
         }
     })
