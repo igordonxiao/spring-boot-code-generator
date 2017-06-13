@@ -514,7 +514,7 @@ public class MainApplication {
      */
     private fun field(column: Pcolumn): FieldSpec {
         val columnAnnotation = com.squareup.javapoet.AnnotationSpec.builder(javax.persistence.Column::class.java).addMember("name", "\"${column.name}\"").build()
-        return FieldSpec.builder(fieldType(column.type), column.name, Modifier.PRIVATE).addAnnotation(columnAnnotation).build()
+        return FieldSpec.builder(fieldType(column.type), column.name.toCamelCase().beginWithLowerCase(), Modifier.PRIVATE).addAnnotation(columnAnnotation).build()
     }
 
     /**
@@ -537,8 +537,10 @@ public class MainApplication {
 
         // 添加getter,setter
         columns.forEach {
-            modelSpec.addMethod(MethodSpec.methodBuilder("get${it.name.capitalize()}").addStatement("return this.${it.name}").returns(fieldType(it.type)).addModifiers(Modifier.PUBLIC).build())
-            modelSpec.addMethod(MethodSpec.methodBuilder("set${it.name.capitalize()}").addParameter(fieldType(it.type), it.name).addStatement("this.${it.name}=${it.name}").addModifiers(Modifier.PUBLIC).build())
+            val nameForCameCase = it.name.toCamelCase()
+            val nameForField = it.name.toCamelCase().beginWithLowerCase()
+            modelSpec.addMethod(MethodSpec.methodBuilder("get${nameForCameCase}").addStatement("return this.${nameForField}").returns(fieldType(it.type)).addModifiers(Modifier.PUBLIC).build())
+            modelSpec.addMethod(MethodSpec.methodBuilder("set${nameForCameCase}").addParameter(fieldType(it.type), nameForField).addStatement("this.${nameForField}=${nameForField}").addModifiers(Modifier.PUBLIC).build())
         }
         JavaFile.builder(MODEL_PACKAGE, modelSpec.build()).build().writeTo(File((DESTINATION_DIR + SOURCE_DIRS[0])))
     }
