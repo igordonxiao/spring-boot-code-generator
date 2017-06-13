@@ -521,7 +521,7 @@ public class MainApplication {
      * 生成Model
      */
     private fun genModel(table: Ptable, columns: List<Pcolumn>) {
-        val modelSpec = TypeSpec.classBuilder(table.name.capitalize())
+        val modelSpec = TypeSpec.classBuilder(table.name.toCamelCase())
         val modelTableAnnotation = AnnotationSpec.builder(Table::class.java).addMember("schema", "\"${table.schema}\"").addMember("name", "\"${table.name}\"").build()
         modelSpec.addAnnotation(Entity::class.java)
                 .addAnnotation(modelTableAnnotation)
@@ -550,16 +550,16 @@ public class MainApplication {
      */
     private fun genDao(table: Ptable) {
         val tableName = table.name
-        (DAO_PACKAGE_DIR + "/" + tableName.capitalize() + "Repository.java").toFile("""package ${DAO_PACKAGE};
+        (DAO_PACKAGE_DIR + "/" + tableName.toCamelCase() + "Repository.java").toFile("""package ${DAO_PACKAGE};
 
-import ${MODEL_PACKAGE}.${tableName.capitalize()};
+import ${MODEL_PACKAGE}.${tableName.toCamelCase()};
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
 /**
 * ${tableName.capitalize()} Repository
 */
 @Repository
-public interface ${tableName.capitalize()}Repository extends PagingAndSortingRepository<${tableName.capitalize()}, Long> {
+public interface ${tableName.toCamelCase()}Repository extends PagingAndSortingRepository<${tableName.toCamelCase()}, Long> {
 
 }
 """)
@@ -569,29 +569,29 @@ public interface ${tableName.capitalize()}Repository extends PagingAndSortingRep
      * 生成Service
      */
     private fun genService(table: Ptable) {
-        val tableName = table.name
-        val capitalizeTableName = tableName.capitalize()
-        (SERVICE_PACKAGE_DIR + "/" + capitalizeTableName + "Service.java").toFile("""package ${SERVICE_PACKAGE};
+        val camelTableName = table.name.toCamelCase()
+        val firstLowerCamelTableName = camelTableName.beginWithLowerCase()
+        (SERVICE_PACKAGE_DIR + "/" + camelTableName + "Service.java").toFile("""package ${SERVICE_PACKAGE};
 
-import ${DAO_PACKAGE}.${capitalizeTableName}Repository;
-import ${MODEL_PACKAGE}.$capitalizeTableName;
+import ${DAO_PACKAGE}.${camelTableName}Repository;
+import ${MODEL_PACKAGE}.${camelTableName};
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
 /**
-* ${tableName.capitalize()} Service
+* ${camelTableName} Service
 */
-@Service("${tableName}Service")
+@Service("${firstLowerCamelTableName}Service")
 @Transactional
-public class ${capitalizeTableName}Service {
+public class ${camelTableName}Service {
 
-    private ${capitalizeTableName}Repository ${tableName}Repository;
+    private ${camelTableName}Repository ${firstLowerCamelTableName}Repository;
 
     @Autowired
-    public void set${capitalizeTableName}Repository(${capitalizeTableName}Repository ${tableName}Repository) {
-        this.${tableName}Repository = ${tableName}Repository;
+    public void set${firstLowerCamelTableName}Repository(${camelTableName}Repository ${firstLowerCamelTableName}Repository) {
+        this.${firstLowerCamelTableName}Repository = ${firstLowerCamelTableName}Repository;
     }
 
     /**
@@ -599,8 +599,8 @@ public class ${capitalizeTableName}Service {
      *
      * @return
      */
-    public Iterable<$capitalizeTableName> getAll() {
-        return ${tableName}Repository.findAll();
+    public Iterable<$camelTableName> getAll() {
+        return ${firstLowerCamelTableName}Repository.findAll();
     }
 
     /**
@@ -609,17 +609,17 @@ public class ${capitalizeTableName}Service {
      * @param id
      * @return
      */
-    public ${capitalizeTableName} getById(@NotNull Long id) {
-        return ${tableName}Repository.findOne(id);
+    public ${camelTableName} getById(@NotNull Long id) {
+        return ${firstLowerCamelTableName}Repository.findOne(id);
     }
 
     /**
      * add or update one
      *
-     * @param ${tableName}
+     * @param ${firstLowerCamelTableName}
      */
-    public ${capitalizeTableName} save(@NotNull ${capitalizeTableName} ${tableName}) {
-        return (${capitalizeTableName})${tableName}Repository.save(${tableName});
+    public ${camelTableName} save(@NotNull ${camelTableName} ${firstLowerCamelTableName}) {
+        return (${camelTableName})${firstLowerCamelTableName}Repository.save(${firstLowerCamelTableName});
     }
 
     /**
@@ -628,7 +628,7 @@ public class ${capitalizeTableName}Service {
      * @param id
      */
     public void delete(@NotNull Long id) {
-        ${tableName}Repository.delete(id);
+        ${firstLowerCamelTableName}Repository.delete(id);
     }
 }
 
@@ -639,76 +639,76 @@ public class ${capitalizeTableName}Service {
      * 生成Controller
      */
     private fun genController(table: Ptable) {
-        val tableName = table.name
-        val capitalizeTableName = tableName.capitalize()
-        (CONTROLLER_PACKAGE_DIR + "/" + capitalizeTableName + "Controller.java").toFile("""package ${CONTROLLER_PACKAGE};
+        val camelTableName = table.name.toCamelCase()
+        val firstLowerCamelTableName = camelTableName.beginWithLowerCase()
+        (CONTROLLER_PACKAGE_DIR + "/" + camelTableName + "Controller.java").toFile("""package ${CONTROLLER_PACKAGE};
 
 import ${COMMON_PACKAGE}.JSONResponse;
-import ${MODEL_PACKAGE}.${capitalizeTableName};
-import ${SERVICE_PACKAGE}.${capitalizeTableName}Service;
+import ${MODEL_PACKAGE}.${camelTableName};
+import ${SERVICE_PACKAGE}.${camelTableName}Service;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * ${capitalizeTableName} Controller
+ * ${camelTableName} Controller
  */
 @RestController
-@RequestMapping("/${tableName}s")
-public class ${capitalizeTableName}Controller {
-    private ${capitalizeTableName}Service ${tableName}Service;
+@RequestMapping("/${firstLowerCamelTableName}s")
+public class ${camelTableName}Controller {
+    private ${camelTableName}Service ${firstLowerCamelTableName}Service;
 
     @Autowired
-    public void set${capitalizeTableName}Service(${capitalizeTableName}Service ${tableName}Service) {
-        this.${tableName}Service = ${tableName}Service;
+    public void set${camelTableName}Service(${camelTableName}Service ${firstLowerCamelTableName}Service) {
+        this.${firstLowerCamelTableName}Service = ${firstLowerCamelTableName}Service;
     }
 
     /**
-     * get a ${capitalizeTableName}
+     * get a ${camelTableName}
      *
      * @return JSONResponse
      */
     @RequestMapping("/{id}")
     @ResponseBody
     public JSONResponse one(@PathVariable Long id) {
-        ${capitalizeTableName} ${tableName} = ${tableName}Service.getById(id);
-        if (${tableName} == null) return JSONResponse.ERROR_FOR_NOT_FOUND();
-        return JSONResponse.OK(${tableName});
+        ${camelTableName} ${firstLowerCamelTableName} = ${firstLowerCamelTableName}Service.getById(id);
+        if (${firstLowerCamelTableName} == null) return JSONResponse.ERROR_FOR_NOT_FOUND();
+        return JSONResponse.OK(${firstLowerCamelTableName});
     }
 
     /**
-     * add a ${capitalizeTableName}
+     * add a ${camelTableName}
      *
-     * @param ${tableName}
+     * @param ${firstLowerCamelTableName}
      * @return JSONResponse
      */
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
-    public JSONResponse add(@RequestBody ${capitalizeTableName} ${tableName}) {
-        ${capitalizeTableName} saved${capitalizeTableName} = ${tableName}Service.save(${tableName});
-        if (saved${capitalizeTableName} == null) return JSONResponse.ERROR_FOR_SERVER_ERROR();
-        return JSONResponse.OK(${tableName});
+    public JSONResponse add(@RequestBody ${camelTableName} ${firstLowerCamelTableName}) {
+        ${camelTableName} saved${camelTableName} = ${firstLowerCamelTableName}Service.save(${firstLowerCamelTableName});
+        if (saved${camelTableName} == null) return JSONResponse.ERROR_FOR_SERVER_ERROR();
+        return JSONResponse.OK(${firstLowerCamelTableName});
     }
 
     /**
-     * update a ${capitalizeTableName}
+     * update a ${camelTableName}
      *
-     * @param ${tableName}
+     * @param ${firstLowerCamelTableName}
      * @return JSONResponse
      */
     @RequestMapping(method = RequestMethod.PUT)
     @ResponseBody
-    public JSONResponse update(@RequestBody ${capitalizeTableName} ${tableName}) {
-        if (${tableName}.getId() == null) return JSONResponse.ERROR_FOR_BAD_PARAM();
-        ${capitalizeTableName} ${tableName}Db = ${tableName}Service.getById(${tableName}.getId());
-        if (${tableName}Db == null) return JSONResponse.ERROR_FOR_NOT_FOUND();
-        BeanUtils.copyProperties(${tableName}, ${tableName}Db);
-        ${tableName}Service.save(${tableName}Db);
-        return JSONResponse.OK(${tableName}Db);
+    public JSONResponse update(@RequestBody ${camelTableName} ${firstLowerCamelTableName}) {
+        if (${firstLowerCamelTableName}.getId() == null) return JSONResponse.ERROR_FOR_BAD_PARAM();
+        ${camelTableName} ${firstLowerCamelTableName}Db = ${firstLowerCamelTableName}Service.getById(${firstLowerCamelTableName}.getId());
+        if (${firstLowerCamelTableName}Db == null) return JSONResponse.ERROR_FOR_NOT_FOUND();
+        BeanUtils.copyProperties(${firstLowerCamelTableName}, ${firstLowerCamelTableName}Db);
+        ${firstLowerCamelTableName}Service.save(${firstLowerCamelTableName}Db);
+        return JSONResponse.OK(${firstLowerCamelTableName}Db);
     }
 
     /**
-     * delete a ${capitalizeTableName}
+     * delete a ${camelTableName}
      *
      * @param id
      * @return JSONResponse
@@ -717,10 +717,10 @@ public class ${capitalizeTableName}Controller {
     @ResponseBody
     public JSONResponse delete(@PathVariable Long id) {
         if (id <= 0) return JSONResponse.ERROR_FOR_BAD_PARAM();
-        ${capitalizeTableName} ${tableName}Db = ${tableName}Service.getById(id);
-        if (${tableName}Db == null) return JSONResponse.ERROR_FOR_NOT_FOUND();
-        ${tableName}Service.delete(id);
-        return JSONResponse.OK(${tableName}Db);
+        ${camelTableName} ${firstLowerCamelTableName}Db = ${firstLowerCamelTableName}Service.getById(id);
+        if (${firstLowerCamelTableName}Db == null) return JSONResponse.ERROR_FOR_NOT_FOUND();
+        ${firstLowerCamelTableName}Service.delete(id);
+        return JSONResponse.OK(${firstLowerCamelTableName}Db);
     }
 }
 
@@ -729,13 +729,13 @@ public class ${capitalizeTableName}Controller {
     }
 
     fun genUnitTest(table: Ptable) {
-        val tableName = table.name
-        val capitalizeTableName = tableName.capitalize()
+        val camelTableName = table.name.toCamelCase()
+        val firstLowerCamelTableName = camelTableName.beginWithLowerCase()
         UNIT_TEST_CODE_BASE_DIR.toDirs()
-        (UNIT_TEST_CODE_BASE_DIR + "/${capitalizeTableName}Test.java").toFile("""package ${GROUP_ID};
+        (UNIT_TEST_CODE_BASE_DIR + "/${camelTableName}Test.java").toFile("""package ${GROUP_ID};
 
-import ${MODEL_PACKAGE}.${capitalizeTableName};
-import ${SERVICE_PACKAGE}.${capitalizeTableName}Service;
+import ${MODEL_PACKAGE}.${camelTableName};
+import ${SERVICE_PACKAGE}.${camelTableName}Service;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -750,18 +750,18 @@ import javax.transaction.Transactional;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Unit Test for ${capitalizeTableName}
+ * Unit Test for ${camelTableName}
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @Transactional
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class ${capitalizeTableName}Test {
-    private ${capitalizeTableName}Service ${tableName}Service;
+public class ${camelTableName}Test {
+    private ${camelTableName}Service ${firstLowerCamelTableName}Service;
 
     @Autowired
-    public void set${capitalizeTableName}Service(${capitalizeTableName}Service ${tableName}Service) {
-        this.${tableName}Service = ${tableName}Service;
+    public void set${camelTableName}Service(${camelTableName}Service ${firstLowerCamelTableName}Service) {
+        this.${firstLowerCamelTableName}Service = ${firstLowerCamelTableName}Service;
     }
 
     @Test
