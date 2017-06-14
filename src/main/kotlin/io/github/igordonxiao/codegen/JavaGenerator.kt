@@ -493,15 +493,21 @@ public class MainApplication {
         return FieldSpec.builder(java.lang.Long::class.java, "id", Modifier.PRIVATE).addAnnotation(javax.persistence.Id::class.java).addAnnotation(generatedValueAnnotation).addAnnotation(idColumnAnnotation).build()
     }
 
-    val dbTypeMapToLong = arrayOf<String>("smallint", "bigint", "integer")
-    val dbTypeMapToString = arrayOf<String>("text")
-    val dbTypeMapToDate = arrayOf<String>("date", "timestamp with time zone")
+    val dbTypeMapToLong = arrayOf<String>("bigint", "BIGINT")
+    val dbTypeMapToInteger = arrayOf<String>("smallint", "SMALLINT", "integer", "INTEGER")
+    val dbTypeMapToDouble = arrayOf<String>("double precision", "DOUBLE PRECISION", "numeric", "NUMERIC")
+    val dbTypeMapToBoolean = arrayOf<String>("boolean", "BOOLEAN")
+    val dbTypeMapToString = arrayOf<String>("text", "TEXT", "uuid", "UUID")
+    val dbTypeMapToDate = arrayOf<String>("date", "DATE", "time with time zone", "TIME WITH TIME ZONE","time without time zone", "TIME WITHOUT TIME ZONE", "timestamp with time zone", "TIMESTAMP WITH TIME ZONE","timestamp without time zone", "TIMESTAMP WITHOUT TIME ZONE")
     /**
      * 获取字段对应的Java类
      */
     private fun fieldType(type: String): Class<*> {
         return when (type) {
             in dbTypeMapToLong -> java.lang.Long::class.java
+            in dbTypeMapToInteger -> java.lang.Integer::class.java
+            in dbTypeMapToDouble -> java.lang.Double::class.java
+            in dbTypeMapToBoolean -> java.lang.Boolean::class.java
             in dbTypeMapToString -> String::class.java
             in dbTypeMapToDate -> Date::class.java
             else ->
