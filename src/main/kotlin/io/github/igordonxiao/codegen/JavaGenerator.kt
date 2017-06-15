@@ -114,12 +114,12 @@ class JavaGenerator(
     /**
      * 数据库操作类文件夹
      */
-    val DAO_PACKAGE_DIR = CODE_BASE_DIR + "/dao"
+    val REPOSITORY_PACKAGE_DIR = CODE_BASE_DIR + "/repository"
 
     /**
      * 数据库操作类包名
      */
-    val DAO_PACKAGE = GROUP_ID + ".dao"
+    val REPOSITORY_PACKAGE = GROUP_ID + ".repository"
 
     /**
      * 服务类文件夹
@@ -152,7 +152,7 @@ class JavaGenerator(
         Database.connect(url = DB_URL, user = DB_USERNAME, password = DB_PASSWORD, driver = DB_DRIVER)
         dbTables().forEach {
             genModel(it, tableMeta(it.name))
-            genDao(it)
+            genRepository(it)
             genService(it)
             genController(it)
             genUnitTest(it)
@@ -254,8 +254,7 @@ nbdist/
 
 """)
         // 生成SpringBoot配置文件
-        (RESOURCE_DIR + "application.yml").toFile("""
-spring:
+        (RESOURCE_DIR + "application.yml").toFile("""spring:
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -452,7 +451,7 @@ public class MainApplication {
     /**
      * 生成代码包文件名
      */
-    private fun genPackageDirs() = arrayListOf<String>(MODEL_PACKAGE_DIR, DAO_PACKAGE_DIR, SERVICE_PACKAGE_DIR, CONTROLLER_PACKAGE_DIR).forEach { it.toDirs() }
+    private fun genPackageDirs() = arrayListOf<String>(MODEL_PACKAGE_DIR, REPOSITORY_PACKAGE_DIR, SERVICE_PACKAGE_DIR, CONTROLLER_PACKAGE_DIR).forEach { it.toDirs() }
 
     /**
      * 获取数据库所有的表名
@@ -497,8 +496,8 @@ public class MainApplication {
     val dbTypeMapToInteger = arrayOf<String>("smallint", "SMALLINT", "integer", "INTEGER")
     val dbTypeMapToDouble = arrayOf<String>("double precision", "DOUBLE PRECISION", "numeric", "NUMERIC")
     val dbTypeMapToBoolean = arrayOf<String>("boolean", "BOOLEAN")
-    val dbTypeMapToString = arrayOf<String>("text", "TEXT", "uuid", "UUID")
-    val dbTypeMapToDate = arrayOf<String>("date", "DATE", "time with time zone", "TIME WITH TIME ZONE","time without time zone", "TIME WITHOUT TIME ZONE", "timestamp with time zone", "TIMESTAMP WITH TIME ZONE","timestamp without time zone", "TIMESTAMP WITHOUT TIME ZONE")
+    val dbTypeMapToString = arrayOf<String>("text", "TEXT", "uuid", "UUID", "character varying", "CHARACTER VARYING")
+    val dbTypeMapToDate = arrayOf<String>("date", "DATE", "time with time zone", "TIME WITH TIME ZONE", "time without time zone", "TIME WITHOUT TIME ZONE", "timestamp with time zone", "TIMESTAMP WITH TIME ZONE", "timestamp without time zone", "TIMESTAMP WITHOUT TIME ZONE")
     /**
      * 获取字段对应的Java类
      */
@@ -552,17 +551,17 @@ public class MainApplication {
     }
 
     /**
-     *  生成Dao
+     *  生成Repository
      */
-    private fun genDao(table: Ptable) {
+    private fun genRepository(table: Ptable) {
         val tableName = table.name
-        (DAO_PACKAGE_DIR + "/" + tableName.toCamelCase() + "Repository.java").toFile("""package ${DAO_PACKAGE};
+        (REPOSITORY_PACKAGE_DIR + "/" + tableName.toCamelCase() + "Repository.java").toFile("""package ${REPOSITORY_PACKAGE};
 
 import ${MODEL_PACKAGE}.${tableName.toCamelCase()};
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
 /**
-* ${tableName.capitalize()} Repository
+* ${tableName.toCamelCase()} Repository
 */
 @Repository
 public interface ${tableName.toCamelCase()}Repository extends PagingAndSortingRepository<${tableName.toCamelCase()}, Long> {
@@ -579,7 +578,7 @@ public interface ${tableName.toCamelCase()}Repository extends PagingAndSortingRe
         val firstLowerCamelTableName = camelTableName.beginWithLowerCase()
         (SERVICE_PACKAGE_DIR + "/" + camelTableName + "Service.java").toFile("""package ${SERVICE_PACKAGE};
 
-import ${DAO_PACKAGE}.${camelTableName}Repository;
+import ${REPOSITORY_PACKAGE}.${camelTableName}Repository;
 import ${MODEL_PACKAGE}.${camelTableName};
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -738,63 +737,37 @@ public class ${camelTableName}Controller {
         val camelTableName = table.name.toCamelCase()
         val firstLowerCamelTableName = camelTableName.beginWithLowerCase()
         UNIT_TEST_CODE_BASE_DIR.toDirs()
-        (UNIT_TEST_CODE_BASE_DIR + "/${camelTableName}Test.java").toFile("""package ${GROUP_ID};
+        (UNIT_TEST_CODE_BASE_DIR + "/${camelTableName}ControllerTest.java").toFile("""package ${GROUP_ID};
 
 import ${MODEL_PACKAGE}.${camelTableName};
 import ${SERVICE_PACKAGE}.${camelTableName}Service;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import javax.transaction.Transactional;
-
-import static org.junit.Assert.assertEquals;
+import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Unit Test for ${camelTableName}
+ * Unit Test for ${camelTableName}Controller
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest
-@Transactional
+@WebMvcTest(${camelTableName}Controller.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ${camelTableName}Test {
-    private ${camelTableName}Service ${firstLowerCamelTableName}Service;
+
+    @MockBean
+    private UserService userService;
 
     @Autowired
-    public void set${camelTableName}Service(${camelTableName}Service ${firstLowerCamelTableName}Service) {
-        this.${firstLowerCamelTableName}Service = ${firstLowerCamelTableName}Service;
-    }
+    private MockMvc mvc;
 
     @Test
-    @Rollback(false)
-    public void test001Save() {
+    public void testGet() throws Exception {
 
     }
-
-    @Test
-    @Rollback(false)
-    public void test002Query() {
-
-    }
-
-    @Test
-    @Rollback(false)
-    public void test003Update() {
-
-    }
-
-    @Test
-    @Rollback(false)
-    public void test004Delete() {
-
-    }
-}
-
 
 """)
     }

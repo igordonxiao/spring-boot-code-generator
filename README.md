@@ -1,4 +1,4 @@
-# Germ(胚芽)
+# Germ
 ## Code generator for Spring Boot Web Project
 
 > This project is used to generate source code with spring boot from database.
@@ -7,7 +7,7 @@
 * Generated file `pom.xml`
 * Generated file `.gitignore`
 * Generated spring boot configuration file `application.yml`
-* Generated `Model`, `Dao`, `Service`, `Controller` layers
+* Generated `Model`, `Repository`, `Service`, `Controller` layers
 * Generated basic `CRUD` operations
 
 ## Language
