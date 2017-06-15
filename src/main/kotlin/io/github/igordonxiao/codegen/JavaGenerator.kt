@@ -230,6 +230,17 @@ nbdist/
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
+       <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger2</artifactId>
+            <version>2.7.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger-ui</artifactId>
+            <version>2.7.0</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -255,6 +266,11 @@ nbdist/
 """)
         // 生成SpringBoot配置文件
         (RESOURCE_DIR + "application.yml").toFile("""spring:
+  profiles:
+    active: dev
+
+""")
+        val applicationContent = """spring:
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -266,6 +282,17 @@ nbdist/
     show-sql: true
 server:
   port: 8080
+
+"""
+        (RESOURCE_DIR + "application-dev.yml").toFile(applicationContent)
+        (RESOURCE_DIR + "application-prod.yml").toFile(applicationContent)
+
+        // 生成README.md文件
+        (DESTINATION_DIR + "/README.md").toFile("""# Swagger2
+
+## [http://localhost:8080/v2/api-docs](http://localhost:8080/v2/api-docs)
+## [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+
 
 """)
     }
@@ -437,9 +464,40 @@ package ${GROUP_ID};
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import springfox.documentation.builders.ApiInfoBuilder;
+import springfox.documentation.builders.PathSelectors;
+import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.service.ApiInfo;
+import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spring.web.plugins.Docket;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 @SpringBootApplication
+@EnableSwagger2
 public class MainApplication {
+
+    @Bean
+    public Docket productApi() {
+        return new Docket(DocumentationType.SWAGGER_2)
+                .apiInfo(apiInfo())
+                .select()
+                .apis(RequestHandlerSelectors.basePackage("${CONTROLLER_PACKAGE}"))
+                .paths(PathSelectors.any())
+                .build();
+    }
+
+    private ApiInfo apiInfo() {
+        // todo: Update info
+        return new ApiInfoBuilder()
+                .title("your title")
+                .description("your description")
+                .termsOfServiceUrl("your service url")
+                .contact("your name")
+                .version("1.0")
+                .build();
+    }
+
 	public static void main(String[] args) {
 		SpringApplication.run(MainApplication.class, args);
 	}
@@ -651,6 +709,10 @@ public class ${camelTableName}Service {
 import ${COMMON_PACKAGE}.JSONResponse;
 import ${MODEL_PACKAGE}.${camelTableName};
 import ${SERVICE_PACKAGE}.${camelTableName}Service;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -658,6 +720,7 @@ import org.springframework.web.bind.annotation.*;
 /**
  * ${camelTableName} Controller
  */
+@Api(value = "${camelTableName}", description = "")
 @RestController
 @RequestMapping("/${firstLowerCamelTableName}s")
 public class ${camelTableName}Controller {
@@ -673,7 +736,8 @@ public class ${camelTableName}Controller {
      *
      * @return JSONResponse
      */
-    @RequestMapping("/{id}")
+    @ApiOperation(value = "get one ${firstLowerCamelTableName}", notes = "get ${firstLowerCamelTableName} by id")
+    @GetMapping("/{id}")
     @ResponseBody
     public JSONResponse one(@PathVariable Long id) {
         ${camelTableName} ${firstLowerCamelTableName} = ${firstLowerCamelTableName}Service.getById(id);
@@ -687,7 +751,9 @@ public class ${camelTableName}Controller {
      * @param ${firstLowerCamelTableName}
      * @return JSONResponse
      */
-    @RequestMapping(method = RequestMethod.POST)
+    @ApiOperation(value = "add ${camelTableName}", notes = "")
+    @ApiImplicitParam(name = "${firstLowerCamelTableName}", value = "${firstLowerCamelTableName} entity", required = true, dataType = "${camelTableName}")
+    @PostMapping
     @ResponseBody
     public JSONResponse add(@RequestBody ${camelTableName} ${firstLowerCamelTableName}) {
         ${camelTableName} saved${camelTableName} = ${firstLowerCamelTableName}Service.save(${firstLowerCamelTableName});
@@ -701,7 +767,11 @@ public class ${camelTableName}Controller {
      * @param ${firstLowerCamelTableName}
      * @return JSONResponse
      */
-    @RequestMapping(method = RequestMethod.PUT)
+    @ApiOperation(value = "update ${firstLowerCamelTableName}", notes = "")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "${firstLowerCamelTableName}", value = "${firstLowerCamelTableName} entity", required = true, dataType = "${camelTableName}")
+    })
+    @PutMapping
     @ResponseBody
     public JSONResponse update(@RequestBody ${camelTableName} ${firstLowerCamelTableName}) {
         if (${firstLowerCamelTableName}.getId() == null) return JSONResponse.ERROR_FOR_BAD_PARAM();
@@ -718,7 +788,9 @@ public class ${camelTableName}Controller {
      * @param id
      * @return JSONResponse
      */
-    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
+    @ApiOperation(value = "delete ${firstLowerCamelTableName} by id", notes = "")
+    @ApiImplicitParam(name = "id", value = "${firstLowerCamelTableName} id", required = true, dataType = "Long")
+    @DeleteMapping(value = "/{id}")
     @ResponseBody
     public JSONResponse delete(@PathVariable Long id) {
         if (id <= 0) return JSONResponse.ERROR_FOR_BAD_PARAM();
@@ -741,9 +813,11 @@ public class ${camelTableName}Controller {
 
 import ${MODEL_PACKAGE}.${camelTableName};
 import ${SERVICE_PACKAGE}.${camelTableName}Service;
+import ${CONTROLLER_PACKAGE}.${camelTableName}Controller;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -756,7 +830,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @RunWith(SpringRunner.class)
 @WebMvcTest(${camelTableName}Controller.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class ${camelTableName}Test {
+public class ${camelTableName}ControllerTest {
 
     @MockBean
     private UserService userService;
@@ -768,6 +842,7 @@ public class ${camelTableName}Test {
     public void testGet() throws Exception {
 
     }
+}
 
 """)
     }
