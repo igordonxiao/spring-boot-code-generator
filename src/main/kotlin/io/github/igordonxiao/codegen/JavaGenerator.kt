@@ -302,154 +302,93 @@ server:
      */
     fun genCommonFiles() {
         (COMMON_PACKAGE_DIR).toDirs()
-        (COMMON_PACKAGE_DIR + "/JSONResponse.java").toFile("""package ${COMMON_PACKAGE};
+        (COMMON_PACKAGE_DIR + "/HttpException.java").toFile("""package ${COMMON_PACKAGE};
 
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
-import java.io.Serializable;
+import javax.validation.constraints.NotNull;
 
 /**
- * Business Logic Response Object
+ * Exception define in HTTP endpoint interaction
  */
-public final class JSONResponse implements Serializable {
-    private static final long serialVersionUID = 1013123223232L;
-    private static final JSONResponse DEFAULT_OK = OK(HttpStatus.OK);
-
-    /**
-     * response something to client with status and message
-     *
-     * @param status
-     * @param message
-     */
-    public JSONResponse(HttpStatus status, String message) {
-        this.status = status;
-        this.message = message;
-        this.data = null;
+public final class HttpException extends RuntimeException {
+    private HttpException(String message) {
+        super(message);
     }
 
-    /**
-     * response something to client with status, message, and data
-     *
-     * @param status
-     * @param message
-     * @param data
-     */
-    public JSONResponse(HttpStatus status, String message, Object data) {
-        this.status = status;
-        this.message = message;
-        this.data = data;
-    }
+    // ------------------------- Exception classes definition start -------------------
 
     /**
-     * Response Status
+     * Bad Request
      */
-    private HttpStatus status;
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public static final class BadRequest extends RuntimeException {
+        private static final BadRequest DEFAULT = new BadRequest("请求错误");
 
-    /**
-     * Business Logic Response Message
-     */
-    private String message;
-
-    /**
-     * Business Logic Response Object
-     */
-    private Object data;
-
-    /**
-     * response successfully with message
-     *
-     * @return
-     */
-    public static JSONResponse OK() {
-        return DEFAULT_OK;
+        public BadRequest(@NotNull String message) {
+            super(message);
+        }
     }
 
 
     /**
-     * response successfully with message
-     *
-     * @param message
-     * @param data
-     * @return
+     * Client is unauthorized
      */
-    public static JSONResponse OK(String message, Object data) {
-        return new JSONResponse(HttpStatus.OK, message, data);
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public static final class Unauthorized extends RuntimeException {
+        private static final Unauthorized DEFAULT = new Unauthorized("未授权");
+
+        public Unauthorized(@NotNull String message) {
+            super(message);
+        }
     }
 
     /**
-     * response successfully with default message and custom object
-     *
-     * @param data
-     * @return
+     * Resources are not found
      */
-    public static JSONResponse OK(Object data) {
-        return new JSONResponse(HttpStatus.OK, HttpStatus.OK.getReasonPhrase(), data);
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public static final class NotFound extends RuntimeException {
+        private static final NotFound DEFAULT = new NotFound("资源未找到");
+
+        public NotFound(@NotNull String message) {
+            super(message);
+        }
     }
 
     /**
-     * response error with message
-     *
-     * @param status
-     * @return
+     * Server Error
      */
-    private static JSONResponse ERROR(HttpStatus status) {
-        return new JSONResponse(status, status.getReasonPhrase());
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public static final class ServerError extends RuntimeException {
+        private static final ServerError DEFAULT = new ServerError("服务器错误");
+
+        public ServerError(@NotNull String message) {
+            super(message);
+        }
+
     }
+
+    // ------------------------- Exception classes definition start -------------------
+    /**
+     * Bad Request
+     */
+    public final static BadRequest BAD_REQUEST = BadRequest.DEFAULT;
 
     /**
-     * response error with bad param
-     *
-     * @return
+     * Unauthorized
      */
-    public static JSONResponse ERROR_FOR_BAD_PARAM() {
-        return ERROR(HttpStatus.BAD_REQUEST);
-    }
+    public final static Unauthorized UNAUTHORIZED = Unauthorized.DEFAULT;
 
     /**
-     * response error with not found
-     *
-     * @return
+     * Not Found
      */
-    public static JSONResponse ERROR_FOR_NOT_FOUND() {
-        return ERROR(HttpStatus.NOT_FOUND);
-    }
+    public final static NotFound NOT_FOUND = NotFound.DEFAULT;
 
     /**
-     * response error with server error
-     *
-     * @return
+     * Server Error
      */
-    public static JSONResponse ERROR_FOR_SERVER_ERROR() {
-        return ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    public Integer getStatus() {
-        return status.value();
-    }
-
-    public HttpStatus getStatusOriginal() {
-        return status;
-    }
-
-    public void setStatus(HttpStatus status) {
-        this.status = status;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public Object getData() {
-        return data;
-    }
-
-    public void setData(Object data) {
-        this.data = data;
-    }
+    public final static ServerError SERVER_ERROR = ServerError.DEFAULT;
 }
 
 """)
@@ -531,12 +470,31 @@ public class MainApplication {
      */
     private fun tableMeta(tableName: String): List<Pcolumn> {
         val columns = arrayListOf<Pcolumn>()
+        val idColumns = arrayListOf<String>()
         transaction {
             val conn = TransactionManager.current().connection
             val statement = conn.createStatement()
-            val query = "select column_name, data_type from information_schema.columns where table_name = '${tableName}'"
+            val query = """SELECT
+                s.COLUMN_NAME as column_name,
+                s.data_type as data_type,
+                d.description as description
+                FROM
+                information_schema.COLUMNS s
+                        left join pg_class c on s.TABLE_NAME = c.relname
+                        left join pg_description d on c.oid = d.objoid and d.objsubid > 0 and d.objsubid=s.ordinal_position
+                WHERE s.TABLE_NAME = '${tableName}'
+            """
             val rs = statement.executeQuery(query)
-            while (rs.next()) columns.add(Pcolumn(rs.getString(1), rs.getString(2)))
+            while (rs.next()) {
+                val columnName = rs.getString(1)
+                if (!idColumns.contains(columnName)) {
+                    idColumns.add(columnName)
+                    val columnType = rs.getString(2)
+                    val columnComment = rs.getString(3)
+                    columns.add(Pcolumn(columnName, columnType, columnComment))
+                }
+
+            }
         }
         return columns
     }
@@ -547,7 +505,8 @@ public class MainApplication {
     private fun idField(): FieldSpec {
         val generatedValueAnnotation = com.squareup.javapoet.AnnotationSpec.builder(javax.persistence.GeneratedValue::class.java).addMember("strategy", "\$T.AUTO", GenerationType::class.java).build()
         val idColumnAnnotation = com.squareup.javapoet.AnnotationSpec.builder(javax.persistence.Column::class.java).addMember("name", "\"id\"").build()
-        return FieldSpec.builder(java.lang.Long::class.java, "id", Modifier.PRIVATE).addAnnotation(javax.persistence.Id::class.java).addAnnotation(generatedValueAnnotation).addAnnotation(idColumnAnnotation).build()
+        val apiModelPropertyAnnotation = com.squareup.javapoet.AnnotationSpec.builder(io.swagger.annotations.ApiModelProperty::class.java).addMember("value", "\"ID\"").build()
+        return FieldSpec.builder(java.lang.Long::class.java, "id", Modifier.PRIVATE).addAnnotation(javax.persistence.Id::class.java).addAnnotation(generatedValueAnnotation).addAnnotation(idColumnAnnotation).addAnnotation(apiModelPropertyAnnotation).build()
     }
 
     val dbTypeMapToLong = arrayOf<String>("bigint", "BIGINT")
@@ -577,7 +536,8 @@ public class MainApplication {
      */
     private fun field(column: Pcolumn): FieldSpec {
         val columnAnnotation = com.squareup.javapoet.AnnotationSpec.builder(javax.persistence.Column::class.java).addMember("name", "\"${column.name}\"").build()
-        return FieldSpec.builder(fieldType(column.type), column.name.toCamelCase().beginWithLowerCase(), Modifier.PRIVATE).addAnnotation(columnAnnotation).build()
+        val apiModelPropertyAnnotation = com.squareup.javapoet.AnnotationSpec.builder(io.swagger.annotations.ApiModelProperty::class.java).addMember("value", "\"${column.comment?:""}\"").build()
+        return FieldSpec.builder(fieldType(column.type), column.name.toCamelCase().beginWithLowerCase(), Modifier.PRIVATE).addAnnotation(columnAnnotation).addAnnotation(apiModelPropertyAnnotation).build()
     }
 
     /**
@@ -706,13 +666,10 @@ public class ${camelTableName}Service {
         val firstLowerCamelTableName = camelTableName.beginWithLowerCase()
         (CONTROLLER_PACKAGE_DIR + "/" + camelTableName + "Controller.java").toFile("""package ${CONTROLLER_PACKAGE};
 
-import ${COMMON_PACKAGE}.JSONResponse;
+import ${COMMON_PACKAGE}.HttpException;
 import ${MODEL_PACKAGE}.${camelTableName};
 import ${SERVICE_PACKAGE}.${camelTableName}Service;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.*;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -734,38 +691,38 @@ public class ${camelTableName}Controller {
     /**
      * get a ${camelTableName}
      *
-     * @return JSONResponse
+     * @return ${camelTableName}
      */
     @ApiOperation(value = "get one ${firstLowerCamelTableName}", notes = "get ${firstLowerCamelTableName} by id")
     @GetMapping("/{id}")
     @ResponseBody
-    public JSONResponse one(@PathVariable Long id) {
+    public ${camelTableName} findById(@PathVariable Long id) {
         ${camelTableName} ${firstLowerCamelTableName} = ${firstLowerCamelTableName}Service.getById(id);
-        if (${firstLowerCamelTableName} == null) return JSONResponse.ERROR_FOR_NOT_FOUND();
-        return JSONResponse.OK(${firstLowerCamelTableName});
+        if (${firstLowerCamelTableName} == null) throw HttpException.NOT_FOUND;
+        return ${firstLowerCamelTableName};
     }
 
     /**
      * add a ${camelTableName}
      *
      * @param ${firstLowerCamelTableName}
-     * @return JSONResponse
+     * @return ${camelTableName}
      */
     @ApiOperation(value = "add ${camelTableName}", notes = "")
     @ApiImplicitParam(name = "${firstLowerCamelTableName}", value = "${firstLowerCamelTableName} entity", required = true, dataType = "${camelTableName}")
     @PostMapping
     @ResponseBody
-    public JSONResponse add(@RequestBody ${camelTableName} ${firstLowerCamelTableName}) {
+    public ${camelTableName} add(@RequestBody ${camelTableName} ${firstLowerCamelTableName}) {
         ${camelTableName} saved${camelTableName} = ${firstLowerCamelTableName}Service.save(${firstLowerCamelTableName});
-        if (saved${camelTableName} == null) return JSONResponse.ERROR_FOR_SERVER_ERROR();
-        return JSONResponse.OK(${firstLowerCamelTableName});
+        if (saved${camelTableName} == null) throw HttpException.SERVER_ERROR;
+        return saved${camelTableName};
     }
 
     /**
      * update a ${camelTableName}
      *
      * @param ${firstLowerCamelTableName}
-     * @return JSONResponse
+     * @return ${camelTableName}
      */
     @ApiOperation(value = "update ${firstLowerCamelTableName}", notes = "")
     @ApiImplicitParams({
@@ -773,31 +730,31 @@ public class ${camelTableName}Controller {
     })
     @PutMapping
     @ResponseBody
-    public JSONResponse update(@RequestBody ${camelTableName} ${firstLowerCamelTableName}) {
-        if (${firstLowerCamelTableName}.getId() == null) return JSONResponse.ERROR_FOR_BAD_PARAM();
+    public ${camelTableName} update(@RequestBody ${camelTableName} ${firstLowerCamelTableName}) {
+        if (${firstLowerCamelTableName}.getId() == null) throw HttpException.BAD_REQUEST;
         ${camelTableName} ${firstLowerCamelTableName}Db = ${firstLowerCamelTableName}Service.getById(${firstLowerCamelTableName}.getId());
-        if (${firstLowerCamelTableName}Db == null) return JSONResponse.ERROR_FOR_NOT_FOUND();
+        if (${firstLowerCamelTableName}Db == null) throw HttpException.NOT_FOUND;
         BeanUtils.copyProperties(${firstLowerCamelTableName}, ${firstLowerCamelTableName}Db);
         ${firstLowerCamelTableName}Service.save(${firstLowerCamelTableName}Db);
-        return JSONResponse.OK(${firstLowerCamelTableName}Db);
+        return ${firstLowerCamelTableName}Db;
     }
 
     /**
      * delete a ${camelTableName}
      *
      * @param id
-     * @return JSONResponse
+     * @return ${camelTableName}
      */
     @ApiOperation(value = "delete ${firstLowerCamelTableName} by id", notes = "")
     @ApiImplicitParam(name = "id", value = "${firstLowerCamelTableName} id", required = true, dataType = "Long")
     @DeleteMapping(value = "/{id}")
     @ResponseBody
-    public JSONResponse delete(@PathVariable Long id) {
-        if (id <= 0) return JSONResponse.ERROR_FOR_BAD_PARAM();
+    public ${camelTableName} delete(@PathVariable Long id) {
+        if (id <= 0) throw HttpException.BAD_REQUEST;
         ${camelTableName} ${firstLowerCamelTableName}Db = ${firstLowerCamelTableName}Service.getById(id);
-        if (${firstLowerCamelTableName}Db == null) return JSONResponse.ERROR_FOR_NOT_FOUND();
+        if (${firstLowerCamelTableName}Db == null) throw HttpException.NOT_FOUND;
         ${firstLowerCamelTableName}Service.delete(id);
-        return JSONResponse.OK(${firstLowerCamelTableName}Db);
+        return ${firstLowerCamelTableName}Db;
     }
 }
 
@@ -833,7 +790,7 @@ import org.springframework.test.web.servlet.MockMvc;
 public class ${camelTableName}ControllerTest {
 
     @MockBean
-    private UserService userService;
+    private ${camelTableName}Service ${firstLowerCamelTableName}Service;
 
     @Autowired
     private MockMvc mvc;
