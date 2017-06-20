@@ -613,7 +613,7 @@ public class ${camelTableName}Service {
     private ${camelTableName}Repository ${firstLowerCamelTableName}Repository;
 
     @Autowired
-    public void set${firstLowerCamelTableName}Repository(${camelTableName}Repository ${firstLowerCamelTableName}Repository) {
+    public void set${camelTableName}Repository(${camelTableName}Repository ${firstLowerCamelTableName}Repository) {
         this.${firstLowerCamelTableName}Repository = ${firstLowerCamelTableName}Repository;
     }
 
@@ -672,6 +672,7 @@ import ${SERVICE_PACKAGE}.${camelTableName}Service;
 import io.swagger.annotations.*;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -712,6 +713,7 @@ public class ${camelTableName}Controller {
     @ApiImplicitParam(name = "${firstLowerCamelTableName}", value = "${firstLowerCamelTableName} entity", required = true, dataType = "${camelTableName}")
     @PostMapping
     @ResponseBody
+    @ResponseStatus(HttpStatus.CREATED)
     public ${camelTableName} add(@RequestBody ${camelTableName} ${firstLowerCamelTableName}) {
         ${camelTableName} saved${camelTableName} = ${firstLowerCamelTableName}Service.save(${firstLowerCamelTableName});
         if (saved${camelTableName} == null) throw HttpException.SERVER_ERROR;
