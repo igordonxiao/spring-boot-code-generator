@@ -717,7 +717,7 @@ public class ${camelTableName}Controller {
     public ${camelTableName} add(@RequestBody ${camelTableName} ${firstLowerCamelTableName}) {
         ${camelTableName} saved${camelTableName} = ${firstLowerCamelTableName}Service.save(${firstLowerCamelTableName});
         if (saved${camelTableName} == null) throw HttpException.SERVER_ERROR;
-        return saved${camelTableName};
+        return ${firstLowerCamelTableName}Service.getById(saved${camelTableName}.getId());;
     }
 
     /**
