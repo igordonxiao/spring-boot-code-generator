@@ -697,7 +697,7 @@ public class ${camelTableName}Controller {
     @ApiOperation(value = "get one ${firstLowerCamelTableName}", notes = "get ${firstLowerCamelTableName} by id")
     @GetMapping("/{id}")
     @ResponseBody
-    public ${camelTableName} findById(@PathVariable Long id) {
+    public ${camelTableName} findById(@ApiParam(value = "${firstLowerCamelTableName} id", type = "Long") @PathVariable Long id) {
         ${camelTableName} ${firstLowerCamelTableName} = ${firstLowerCamelTableName}Service.getById(id);
         if (${firstLowerCamelTableName} == null) throw HttpException.NOT_FOUND;
         return ${firstLowerCamelTableName};
@@ -714,7 +714,7 @@ public class ${camelTableName}Controller {
     @PostMapping
     @ResponseBody
     @ResponseStatus(HttpStatus.CREATED)
-    public ${camelTableName} add(@RequestBody ${camelTableName} ${firstLowerCamelTableName}) {
+    public ${camelTableName} add(@ApiParam(value = "${camelTableName}", type = "${camelTableName}") @RequestBody ${camelTableName} ${firstLowerCamelTableName}) {
         ${camelTableName} saved${camelTableName} = ${firstLowerCamelTableName}Service.save(${firstLowerCamelTableName});
         if (saved${camelTableName} == null) throw HttpException.SERVER_ERROR;
         return ${firstLowerCamelTableName}Service.getById(saved${camelTableName}.getId());;
@@ -732,7 +732,7 @@ public class ${camelTableName}Controller {
     })
     @PutMapping
     @ResponseBody
-    public ${camelTableName} update(@RequestBody ${camelTableName} ${firstLowerCamelTableName}) {
+    public ${camelTableName} update(@ApiParam(value = "${firstLowerCamelTableName} id", type = "${camelTableName}") @RequestBody ${camelTableName} ${firstLowerCamelTableName}) {
         if (${firstLowerCamelTableName}.getId() == null) throw HttpException.BAD_REQUEST;
         ${camelTableName} ${firstLowerCamelTableName}Db = ${firstLowerCamelTableName}Service.getById(${firstLowerCamelTableName}.getId());
         if (${firstLowerCamelTableName}Db == null) throw HttpException.NOT_FOUND;
@@ -748,10 +748,9 @@ public class ${camelTableName}Controller {
      * @return ${camelTableName}
      */
     @ApiOperation(value = "delete ${firstLowerCamelTableName} by id", notes = "")
-    @ApiImplicitParam(name = "id", value = "${firstLowerCamelTableName} id", required = true, dataType = "Long")
     @DeleteMapping(value = "/{id}")
     @ResponseBody
-    public ${camelTableName} delete(@PathVariable Long id) {
+    public ${camelTableName} delete(@ApiParam(value = "${firstLowerCamelTableName} id", type = "Long") @PathVariable Long id) {
         if (id <= 0) throw HttpException.BAD_REQUEST;
         ${camelTableName} ${firstLowerCamelTableName}Db = ${firstLowerCamelTableName}Service.getById(id);
         if (${firstLowerCamelTableName}Db == null) throw HttpException.NOT_FOUND;
